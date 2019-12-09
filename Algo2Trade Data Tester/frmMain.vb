@@ -262,6 +262,7 @@ Public Class frmMain
                     End If
                 Next
                 If optionStocks IsNot Nothing AndAlso optionStocks.Count > 0 Then
+                    OnHeartbeat("Opening Excel")
                     Using excelWriter As New ExcelHelper(outputFilename, ExcelHelper.ExcelOpenStatus.OpenExistingForReadWrite, ExcelHelper.ExcelSaveType.XLS_XLSX, _canceller)
                         AddHandler excelWriter.Heartbeat, AddressOf OnHeartbeat
                         AddHandler excelWriter.WaitingFor, AddressOf OnWaitingFor

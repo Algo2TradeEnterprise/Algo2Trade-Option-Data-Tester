@@ -189,8 +189,9 @@ Namespace DAL
             Dim sourceSheets As Excel.Sheets = sourceWorkBook.Sheets
             Dim wsSource As Excel.Worksheet = DirectCast(sourceSheets.Item(sheetToCopy), Excel.Worksheet)
             Dim wsDestination As Excel.Worksheet = DirectCast(destinationSheets.Item(1), Excel.Worksheet)
-            wsSource.Name = targetSheetName
             wsSource.Copy(Before:=wsDestination)
+            Dim copiedSheet As Excel.Worksheet = DirectCast(destinationSheets.Item(1), Excel.Worksheet)
+            copiedSheet.Name = targetSheetName
             _wBookInstance.Save()
             ret = True
             Return ret
