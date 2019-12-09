@@ -193,11 +193,13 @@ Public Class frmMain
 
     Private Sub frmMain_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         SetObjectEnableDisable_ThreadSafe(btnStop, False)
+        txtFilePath.Text = My.Settings.FilePath
     End Sub
 
     Private Async Sub btnStart_Click(sender As Object, e As EventArgs) Handles btnStart.Click
         _canceller = New CancellationTokenSource
-
+        My.Settings.FilePath = txtFilePath.Text
+        My.Settings.Save()
         SetObjectEnableDisable_ThreadSafe(btnStart, False)
         SetObjectEnableDisable_ThreadSafe(btnStop, True)
 
@@ -212,7 +214,10 @@ Public Class frmMain
             AddHandler cmn.DocumentRetryStatus, AddressOf OnDocumentRetryStatus
 
             Dim templateFile As String = GetTextBoxText_ThreadSafe(txtFilePath)
-            Dim outputFilename As String = "Output File"
+            Dim outputFilename As String = Path.Combine(My.Application.Info.DirectoryPath, "Output File.xlsx")
+            OnHeartbeat("File Copy in progress")
+            If File.Exists(outputFilename) Then File.Delete(outputFilename)
+            File.Copy(templateFile, outputFilename)
             Dim instrumentList As List(Of String) = cmn.GetAllStockList(Common.DataBaseTable.EOD_Futures, Now.Date)
 
             If instrumentList IsNot Nothing AndAlso instrumentList.Count > 0 Then
@@ -257,7 +262,7 @@ Public Class frmMain
                     End If
                 Next
                 If optionStocks IsNot Nothing AndAlso optionStocks.Count > 0 Then
-                    Using excelWriter As New ExcelHelper(outputFilename, Utilities.DAL.ExcelHelper.ExcelOpenStatus.OpenExistingForReadWrite, Utilities.DAL.ExcelHelper.ExcelSaveType.XLS_XLSX, _canceller)
+                    Using excelWriter As New ExcelHelper(outputFilename, ExcelHelper.ExcelOpenStatus.OpenExistingForReadWrite, ExcelHelper.ExcelSaveType.XLS_XLSX, _canceller)
                         AddHandler excelWriter.Heartbeat, AddressOf OnHeartbeat
                         AddHandler excelWriter.WaitingFor, AddressOf OnWaitingFor
                         For Each runningStock In optionStocks.Keys
@@ -283,10 +288,8 @@ Public Class frmMain
                                     End If
                                 Next
                                 If optionPayloads IsNot Nothing AndAlso optionPayloads.Count > 0 Then
-                                    OnHeartbeat("File Copy in progress")
-                                    File.Copy(templateFile, outputFilename)
                                     OnHeartbeat("Writing Excel")
-                                    Await WriteToExcel(excelWriter, outputFilename, optionPayloads).ConfigureAwait(False)
+                                    Await WriteToExcel(excelWriter, optionPayloads, GetSheetName(runningStock)).ConfigureAwait(False)
                                 End If
                             End If
                         Next
@@ -319,8 +322,11 @@ Public Class frmMain
         txtFilePath.Text = OpenFileDialog.FileName
     End Sub
 
-    Private Async Function WriteToExcel(ByVal excelWriter As ExcelHelper, ByVal outputFileName As String, ByVal dataToWrite As Dictionary(Of Date, PairPayload)) As Task
+    Private Async Function WriteToExcel(ByVal excelWriter As ExcelHelper, ByVal dataToWrite As Dictionary(Of Date, PairPayload), ByVal sheetName As String) As Task
         Await Task.Delay(0, _canceller.Token).ConfigureAwait(False)
+
+        excelWriter.CopyExcelSheet("Template", sheetName)
+        excelWriter.SetActiveSheet(sheetName)
 
         Dim instrument1StartingColumn As Integer = 0
         Dim instrument2StartingColumn As Integer = 8
@@ -422,4 +428,26 @@ Public Class frmMain
         excelWriter.SaveExcel()
     End Function
 
+    Private Function GetSheetName(ByVal name As String) As String
+        Dim ret As String = name
+        If name.Contains(":") Then
+            ret = name.Replace(":", " ")
+        ElseIf name.Contains("\") Then
+            ret = name.Replace("\", " ")
+        ElseIf name.Contains("/") Then
+            ret = name.Replace("/", " ")
+        ElseIf name.Contains("?") Then
+            ret = name.Replace("?", " ")
+        ElseIf name.Contains("*") Then
+            ret = name.Replace("*", " ")
+        ElseIf name.Contains("[") Then
+            ret = name.Replace("[", " ")
+        ElseIf name.Contains("]") Then
+            ret = name.Replace("]", " ")
+        Else
+            ret = name
+        End If
+        If ret.Length > 30 Then ret = ret.Substring(0, 25)
+        Return ret
+    End Function
 End Class

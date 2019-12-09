@@ -170,6 +170,31 @@ Namespace DAL
             rg = Nothing
             Return ret
         End Function
+        Public Function GetExcelSheetsName() As List(Of String)
+            Dim ret As List(Of String) = Nothing
+            Dim sheets As Excel.Sheets = _wBookInstance.Sheets
+            If sheets IsNot Nothing AndAlso sheets.Count > 0 Then
+                For i As Integer = 1 To sheets.Count
+                    If ret Is Nothing Then ret = New List(Of String)
+                    ret.Add(sheets.Item(i).Name)
+                Next
+            End If
+            Return ret
+        End Function
+        Public Function CopyExcelSheet(ByVal sheetToCopy As String, ByVal targetSheetName As String) As Boolean
+            Dim ret As Boolean = False
+            Dim destinationSheets As Excel.Sheets = _wBookInstance.Sheets
+
+            Dim sourceWorkBook As Excel.Workbook = _wBookInstance
+            Dim sourceSheets As Excel.Sheets = sourceWorkBook.Sheets
+            Dim wsSource As Excel.Worksheet = DirectCast(sourceSheets.Item(sheetToCopy), Excel.Worksheet)
+            Dim wsDestination As Excel.Worksheet = DirectCast(destinationSheets.Item(1), Excel.Worksheet)
+            wsSource.Name = targetSheetName
+            wsSource.Copy(Before:=wsDestination)
+            _wBookInstance.Save()
+            ret = True
+            Return ret
+        End Function
         Public Sub WriteArrayToExcel(ByVal arr(,) As Object, ByVal rangeStr As String)
             logger.Debug("Writing from memory(array) to file")
             OnHeartbeat("Writing from memory(array) to file")
