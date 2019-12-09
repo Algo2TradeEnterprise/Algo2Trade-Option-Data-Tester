@@ -266,12 +266,15 @@ Public Class frmMain
                     Using excelWriter As New ExcelHelper(outputFilename, ExcelHelper.ExcelOpenStatus.OpenExistingForReadWrite, ExcelHelper.ExcelSaveType.XLS_XLSX, _canceller)
                         AddHandler excelWriter.Heartbeat, AddressOf OnHeartbeat
                         AddHandler excelWriter.WaitingFor, AddressOf OnWaitingFor
+                        Dim stockCounter As Integer = 0
                         For Each runningStock In optionStocks.Keys
+                            stockCounter += 1
+                            SetLabelText_ThreadSafe(lblMainProgress, String.Format("Processing for {0} ({1}/{2})", runningStock, stockCounter, optionStocks.Count))
                             If optionStocks(runningStock) IsNot Nothing Then
                                 Dim optionPayloads As Dictionary(Of Date, PairPayload) = Nothing
                                 Dim counter As Integer = 0
                                 For Each stock In optionStocks(runningStock)
-                                    Dim dataPayloads As Dictionary(Of Date, Payload) = Await cmn.GetHistoricalDataForSpecificTradingSymbolAsync(Common.DataBaseTable.EOD_Futures, stock, Now.Date, Now.Date).ConfigureAwait(False)
+                                    Dim dataPayloads As Dictionary(Of Date, Payload) = Await cmn.GetHistoricalDataForSpecificTradingSymbolAsync(Common.DataBaseTable.Intraday_Futures, stock, Now.Date, Now.Date).ConfigureAwait(False)
                                     counter += 1
                                     If dataPayloads IsNot Nothing AndAlso dataPayloads.Count > 0 Then
                                         If counter = 1 Then

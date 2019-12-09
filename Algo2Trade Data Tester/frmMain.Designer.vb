@@ -32,19 +32,20 @@ Partial Class frmMain
         Me.txtFilePath = New System.Windows.Forms.TextBox()
         Me.cmbSymbol = New System.Windows.Forms.ComboBox()
         Me.Label1 = New System.Windows.Forms.Label()
+        Me.lblMainProgress = New System.Windows.Forms.Label()
         Me.SuspendLayout()
         '
         'lblProgress
         '
-        Me.lblProgress.Location = New System.Drawing.Point(25, 372)
+        Me.lblProgress.Location = New System.Drawing.Point(25, 308)
         Me.lblProgress.Name = "lblProgress"
-        Me.lblProgress.Size = New System.Drawing.Size(695, 34)
+        Me.lblProgress.Size = New System.Drawing.Size(695, 98)
         Me.lblProgress.TabIndex = 0
         Me.lblProgress.Text = "lblProgress"
         '
         'btnStart
         '
-        Me.btnStart.Location = New System.Drawing.Point(536, 314)
+        Me.btnStart.Location = New System.Drawing.Point(547, 70)
         Me.btnStart.Name = "btnStart"
         Me.btnStart.Size = New System.Drawing.Size(84, 43)
         Me.btnStart.TabIndex = 1
@@ -53,7 +54,7 @@ Partial Class frmMain
         '
         'btnStop
         '
-        Me.btnStop.Location = New System.Drawing.Point(636, 314)
+        Me.btnStop.Location = New System.Drawing.Point(647, 70)
         Me.btnStop.Name = "btnStop"
         Me.btnStop.Size = New System.Drawing.Size(84, 43)
         Me.btnStop.TabIndex = 5
@@ -63,7 +64,7 @@ Partial Class frmMain
         'lblFilePath
         '
         Me.lblFilePath.AutoSize = True
-        Me.lblFilePath.Location = New System.Drawing.Point(273, 282)
+        Me.lblFilePath.Location = New System.Drawing.Point(25, 83)
         Me.lblFilePath.Name = "lblFilePath"
         Me.lblFilePath.Size = New System.Drawing.Size(126, 17)
         Me.lblFilePath.TabIndex = 6
@@ -71,7 +72,7 @@ Partial Class frmMain
         '
         'btnBrowse
         '
-        Me.btnBrowse.Location = New System.Drawing.Point(682, 280)
+        Me.btnBrowse.Location = New System.Drawing.Point(434, 81)
         Me.btnBrowse.Name = "btnBrowse"
         Me.btnBrowse.Size = New System.Drawing.Size(41, 23)
         Me.btnBrowse.TabIndex = 8
@@ -83,7 +84,7 @@ Partial Class frmMain
         '
         'txtFilePath
         '
-        Me.txtFilePath.Location = New System.Drawing.Point(408, 281)
+        Me.txtFilePath.Location = New System.Drawing.Point(160, 82)
         Me.txtFilePath.Name = "txtFilePath"
         Me.txtFilePath.Size = New System.Drawing.Size(268, 22)
         Me.txtFilePath.TabIndex = 7
@@ -106,11 +107,19 @@ Partial Class frmMain
         Me.Label1.TabIndex = 9
         Me.Label1.Text = "Symbol List:"
         '
+        'lblMainProgress
+        '
+        Me.lblMainProgress.Location = New System.Drawing.Point(25, 281)
+        Me.lblMainProgress.Name = "lblMainProgress"
+        Me.lblMainProgress.Size = New System.Drawing.Size(695, 27)
+        Me.lblMainProgress.TabIndex = 10
+        '
         'frmMain
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(8.0!, 16.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(750, 418)
+        Me.Controls.Add(Me.lblMainProgress)
         Me.Controls.Add(Me.Label1)
         Me.Controls.Add(Me.cmbSymbol)
         Me.Controls.Add(Me.btnBrowse)
@@ -138,4 +147,5 @@ Partial Class frmMain
     Friend WithEvents txtFilePath As TextBox
     Friend WithEvents cmbSymbol As ComboBox
     Friend WithEvents Label1 As Label
+    Friend WithEvents lblMainProgress As Label
 End Class
