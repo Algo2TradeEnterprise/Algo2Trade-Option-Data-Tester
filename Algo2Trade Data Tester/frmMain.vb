@@ -222,7 +222,7 @@ Public Class frmMain
 
             If instrumentList IsNot Nothing AndAlso instrumentList.Count > 0 Then
                 Dim optionStocks As Dictionary(Of String, List(Of String)) = Nothing
-                For Each runningStock In instrumentList.Take(2)
+                For Each runningStock In instrumentList
                     _canceller.Token.ThrowIfCancellationRequested()
                     Dim stockPayload As Dictionary(Of Date, Payload) = Await cmn.GetHistoricalDataAsync(Common.DataBaseTable.EOD_Futures, runningStock, Now.Date, Now.Date).ConfigureAwait(False)
                     _canceller.Token.ThrowIfCancellationRequested()
@@ -309,6 +309,7 @@ Public Class frmMain
             MsgBox(ex.ToString)
         Finally
             OnHeartbeat("Process Complete")
+            SetLabelText_ThreadSafe(lblMainProgress, "")
             SetObjectEnableDisable_ThreadSafe(btnStart, True)
             SetObjectEnableDisable_ThreadSafe(btnStop, False)
         End Try
