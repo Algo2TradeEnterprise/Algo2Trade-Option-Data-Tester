@@ -225,7 +225,7 @@ Public Class frmMain
                 Dim ctr As Integer = 0
                 For Each runningStock In instrumentList
                     ctr += 1
-                    SetLabelText_ThreadSafe(lblMainProgress, String.Format("Processing Option Chain Data for {0} ({1}/{2})", runningStock, ctr, optionStocks.Count))
+                    SetLabelText_ThreadSafe(lblMainProgress, String.Format("Processing Option Chain Data for {0} ({1}/{2})", runningStock, ctr, instrumentList.Count))
                     _canceller.Token.ThrowIfCancellationRequested()
                     Dim stockPayload As Dictionary(Of Date, Payload) = Await cmn.GetHistoricalDataAsync(Common.DataBaseTable.EOD_Futures, runningStock, Now.Date, Now.Date).ConfigureAwait(False)
                     _canceller.Token.ThrowIfCancellationRequested()
