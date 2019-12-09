@@ -27,7 +27,7 @@ Public Class OptionChainHelper
 #End Region
 
     Private ReadOnly _cts As CancellationTokenSource
-    Private ReadOnly _NSEOpenChainURL As String = "https://www.nseindia.com/live_market/dynaContent/live_watch/option_chain/optionKeys.jsp?symbolCode=-0&symbol={0}&symbol={0}&instrument=OPTIDX&date=-&segmentLink=17&segmentLink=17"
+    Private ReadOnly _NSEOpenChainURL As String = "https://www.nseindia.com/live_market/dynaContent/live_watch/option_chain/optionKeys.jsp?symbolCode=0&symbol={0}&symbol={0}&instrument=OPTSTK&date=-&segmentLink=17&segmentLink=17"
     Private ReadOnly _instrumentName As String
     Public Sub New(ByVal canceller As CancellationTokenSource, ByVal instrumentName As String)
         _cts = canceller

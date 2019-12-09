@@ -217,7 +217,7 @@ Public Class frmMain
 
             If instrumentList IsNot Nothing AndAlso instrumentList.Count > 0 Then
                 Dim optionStocks As Dictionary(Of String, List(Of String)) = Nothing
-                For Each runningStock In instrumentList
+                For Each runningStock In instrumentList.Take(2)
                     _canceller.Token.ThrowIfCancellationRequested()
                     Dim stockPayload As Dictionary(Of Date, Payload) = Await cmn.GetHistoricalDataAsync(Common.DataBaseTable.EOD_Futures, runningStock, Now.Date, Now.Date).ConfigureAwait(False)
                     _canceller.Token.ThrowIfCancellationRequested()
@@ -249,8 +249,8 @@ Public Class frmMain
                                                                                    End Function).FirstOrDefault
 
                             _canceller.Token.ThrowIfCancellationRequested()
-                            Dim peStockName As String = tradingSymbol.Replace("FUT", String.Format("{0}PE", peStrikePrice))
-                            Dim ceStockName As String = tradingSymbol.Replace("FUT", String.Format("{0}CE", ceStrikePrice))
+                            Dim peStockName As String = tradingSymbol.Replace("FUT", String.Format("{0}PE", CInt(peStrikePrice)))
+                            Dim ceStockName As String = tradingSymbol.Replace("FUT", String.Format("{0}CE", CInt(ceStrikePrice)))
                             If optionStocks Is Nothing Then optionStocks = New Dictionary(Of String, List(Of String))
                             optionStocks.Add(runningStock, New List(Of String) From {peStockName, ceStockName})
                         End If

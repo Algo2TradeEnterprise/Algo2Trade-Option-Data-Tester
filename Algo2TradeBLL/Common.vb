@@ -661,7 +661,7 @@ Public Class Common
                 cm = New MySqlCommand("SELECT `INSTRUMENT_TOKEN`,`TRADING_SYMBOL`,`EXPIRY` FROM `active_instruments_commodity` WHERE `TRADING_SYMBOL` LIKE @trd AND `AS_ON_DATE`=@sd", conn)
                 cm.Parameters.AddWithValue("@trd", String.Format("{0}%", rawInstrumentName))
             Case DataBaseTable.Intraday_Futures, DataBaseTable.EOD_Futures
-                cm = New MySqlCommand("SELECT `INSTRUMENT_TOKEN`,`TRADING_SYMBOL`,`EXPIRY` FROM `active_instruments_futures` WHERE `TRADING_SYMBOL` LIKE @trd AND `AS_ON_DATE`=@sd", conn)
+                cm = New MySqlCommand("SELECT `INSTRUMENT_TOKEN`,`TRADING_SYMBOL`,`EXPIRY` FROM `active_instruments_futures` WHERE `TRADING_SYMBOL` LIKE @trd AND `SEGMENT`='NFO-FUT'  AND `AS_ON_DATE`=@sd", conn)
                 cm.Parameters.AddWithValue("@trd", String.Format("{0}%", rawInstrumentName))
         End Select
 
@@ -901,7 +901,7 @@ Public Class Common
             Case DataBaseTable.Intraday_Commodity, DataBaseTable.EOD_Commodity
                 cm = New MySqlCommand("SELECT `TRADING_SYMBOL` FROM `active_instruments_commodity` WHERE `AS_ON_DATE`=@sd", conn)
             Case DataBaseTable.Intraday_Futures, DataBaseTable.EOD_Futures
-                cm = New MySqlCommand("SELECT `TRADING_SYMBOL` FROM `active_instruments_futures` WHERE `AS_ON_DATE`=@sd", conn)
+                cm = New MySqlCommand("SELECT `TRADING_SYMBOL` FROM `active_instruments_futures` WHERE `SEGMENT`='NFO-FUT' AND `AS_ON_DATE`=@sd", conn)
         End Select
 
         OnHeartbeat(String.Format("Getting all stock list from DataBase for {0}", tradingDate.ToShortDateString))
