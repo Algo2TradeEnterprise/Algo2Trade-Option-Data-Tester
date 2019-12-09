@@ -222,7 +222,10 @@ Public Class frmMain
 
             If instrumentList IsNot Nothing AndAlso instrumentList.Count > 0 Then
                 Dim optionStocks As Dictionary(Of String, List(Of String)) = Nothing
+                Dim ctr As Integer = 0
                 For Each runningStock In instrumentList
+                    ctr += 1
+                    SetLabelText_ThreadSafe(lblMainProgress, String.Format("Processing Option Chain Data for {0} ({1}/{2})", runningStock, ctr, optionStocks.Count))
                     _canceller.Token.ThrowIfCancellationRequested()
                     Dim stockPayload As Dictionary(Of Date, Payload) = Await cmn.GetHistoricalDataAsync(Common.DataBaseTable.EOD_Futures, runningStock, Now.Date, Now.Date).ConfigureAwait(False)
                     _canceller.Token.ThrowIfCancellationRequested()
@@ -261,6 +264,7 @@ Public Class frmMain
                         End If
                     End If
                 Next
+                SetLabelText_ThreadSafe(lblMainProgress, "")
                 If optionStocks IsNot Nothing AndAlso optionStocks.Count > 0 Then
                     OnHeartbeat("Opening Excel")
                     Using excelWriter As New ExcelHelper(outputFilename, ExcelHelper.ExcelOpenStatus.OpenExistingForReadWrite, ExcelHelper.ExcelSaveType.XLS_XLSX, _canceller)
