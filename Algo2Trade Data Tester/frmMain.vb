@@ -274,6 +274,7 @@ Public Class frmMain
                         AddHandler excelWriter.Heartbeat, AddressOf OnHeartbeat
                         AddHandler excelWriter.WaitingFor, AddressOf OnWaitingFor
                         Dim stockCounter As Integer = 0
+                        Dim sheetList As List(Of String) = Nothing
                         For Each runningStock In optionStocks.Keys
                             stockCounter += 1
                             SetLabelText_ThreadSafe(lblMainProgress, String.Format("Processing for {0} ({1}/{2})", runningStock, stockCounter, optionStocks.Count))
@@ -298,10 +299,27 @@ Public Class frmMain
                                 End If
                                 If optionPayloads IsNot Nothing AndAlso optionPayloads.Count > 0 Then
                                     OnHeartbeat("Writing Excel")
-                                    Await WriteToExcel(excelWriter, optionPayloads, GetSheetName(runningStock), optionStocks(runningStock).LotSize).ConfigureAwait(False)
+                                    Dim sheetName As String = GetSheetName(runningStock)
+                                    Await WriteToExcel(excelWriter, optionPayloads, sheetName, optionStocks(runningStock).LotSize).ConfigureAwait(False)
+                                    If sheetList Is Nothing Then sheetList = New List(Of String)
+                                    sheetList.Add(sheetName)
                                 End If
                             End If
                         Next
+                        If sheetList IsNot Nothing AndAlso sheetList.Count > 0 Then
+                            excelWriter.CreateNewSheet("Summary")
+                            excelWriter.SetActiveSheet("Summary")
+
+                            excelWriter.SetData(1, 1, "Stock Name")
+                            excelWriter.SetData(1, 2, "Max Total")
+
+                            Dim rowCounter As Integer = 2
+                            For Each runningSheet In sheetList
+                                excelWriter.SetData(rowCounter, 1, runningSheet)
+                                excelWriter.SetCellFormula(rowCounter, 1, String.Format("={0}!AE3", runningSheet))
+                                rowCounter += 1
+                            Next
+                        End If
                     End Using
                 End If
             End If
@@ -427,7 +445,7 @@ Public Class frmMain
             Erase mainRawData
             mainRawData = Nothing
 
-            excelWriter.SetData(2, 31, lotSize, "##,##,##0", ExcelHelper.XLAlign.Right)
+            excelWriter.SetData(2, 31, lotSize, "######0", ExcelHelper.XLAlign.Right)
         End If
         excelWriter.SaveExcel()
     End Function
