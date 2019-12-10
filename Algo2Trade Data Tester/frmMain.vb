@@ -306,7 +306,9 @@ Public Class frmMain
                                 End If
                             End If
                         Next
+                        SetLabelText_ThreadSafe(lblMainProgress, "")
                         If sheetList IsNot Nothing AndAlso sheetList.Count > 0 Then
+                            OnHeartbeat("Writting Summary Sheet")
                             excelWriter.CreateNewSheet("Summary")
                             excelWriter.SetActiveSheet("Summary")
 
