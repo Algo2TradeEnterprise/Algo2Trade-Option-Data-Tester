@@ -339,7 +339,7 @@ Public Class frmMain
         excelWriter.SetActiveSheet(sheetName)
 
         Dim instrument1StartingColumn As Integer = 0
-        Dim instrument2StartingColumn As Integer = 8
+        Dim instrument2StartingColumn As Integer = 7
         Dim rowCounter As Integer = 0
         Dim columnCounter As Integer = 0
 
@@ -422,7 +422,7 @@ Public Class frmMain
                 rowCounter += 1
             Next
 
-            Dim range As String = excelWriter.GetNamedRange(2, rowCounter - 1, 1, 15)
+            Dim range As String = excelWriter.GetNamedRange(2, rowCounter - 1, 1, 13)
             excelWriter.WriteArrayToExcel(mainRawData, range)
             Erase mainRawData
             mainRawData = Nothing
