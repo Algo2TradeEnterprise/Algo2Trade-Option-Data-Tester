@@ -241,7 +241,7 @@ Public Class frmMain
                             AddHandler optnChnHlpr.WaitingFor, AddressOf OnWaitingFor
                             AddHandler optnChnHlpr.DocumentRetryStatus, AddressOf OnDocumentRetryStatus
 
-                            callsList = Await optnChnHlpr.GetCallsList().ConfigureAwait(False)
+                            callsList = Await optnChnHlpr.GetDataAsync().ConfigureAwait(False)
 
                             RemoveHandler optnChnHlpr.DocumentDownloadComplete, AddressOf OnDocumentDownloadComplete
                             RemoveHandler optnChnHlpr.Heartbeat, AddressOf OnHeartbeat
@@ -278,9 +278,9 @@ Public Class frmMain
                                     optionStocks.Add(runningStock, New PairInstrumentDetails With {.Instrument1 = peStockName, .Instrument2 = ceStockName, .LotSize = lotsize})
                                 Else
                                     Console.WriteLine(String.Format("Stock Neglected:{0}", runningStock))
-                                    Console.WriteLine(String.Format("First Call:{0},{1},{2},{3}", firstCall.StrikePrice, firstCall.BidPrice, firstCall.AskPrice, firstCallSpreadPercentage))
-                                    Console.WriteLine(String.Format("Second Call:{0},{1},{2},{3}", secondCall.StrikePrice, secondCall.BidPrice, secondCall.AskPrice, secondCallSpreadPercentage))
-                                    Console.WriteLine(String.Format("Third Call:{0},{1},{2},{3}", thirdCall.StrikePrice, thirdCall.BidPrice, thirdCall.AskPrice, thirdCallSpreadPercentage))
+                                    Console.WriteLine(String.Format("First Call:{0},{1},{2},{3}", firstCall.StrikePrice, firstCall.BidPrice, firstCall.AskPrice, Math.Round(firstCallSpreadPercentage, 4)))
+                                    Console.WriteLine(String.Format("Second Call:{0},{1},{2},{3}", secondCall.StrikePrice, secondCall.BidPrice, secondCall.AskPrice, Math.Round(secondCallSpreadPercentage, 4)))
+                                    Console.WriteLine(String.Format("Third Call:{0},{1},{2},{3}", thirdCall.StrikePrice, thirdCall.BidPrice, thirdCall.AskPrice, Math.Round(thirdCallSpreadPercentage, 4)))
                                     Console.WriteLine(String.Format("Average Spread:{0}%", Math.Round(averageSpreadPercentage, 4)))
                                 End If
                             End If
@@ -335,12 +335,14 @@ Public Class frmMain
                             excelWriter.SetActiveSheet("Summary")
 
                             excelWriter.SetData(1, 1, "Stock Name")
-                            excelWriter.SetData(1, 2, "Max Total")
+                            excelWriter.SetData(1, 2, "Max Draw Up")
+                            excelWriter.SetData(1, 3, "Current PL")
 
                             Dim rowCounter As Integer = 2
                             For Each runningSheet In sheetList
                                 excelWriter.SetData(rowCounter, 1, runningSheet)
                                 excelWriter.SetCellFormula(rowCounter, 2, String.Format("='{0}'!AE3", runningSheet))
+                                excelWriter.SetCellFormula(rowCounter, 3, String.Format("='{0}'!AE4", runningSheet))
                                 rowCounter += 1
                             Next
                         End If

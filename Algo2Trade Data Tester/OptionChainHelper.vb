@@ -1,7 +1,9 @@
-﻿Imports HtmlAgilityPack
+﻿Imports System.IO
+Imports HtmlAgilityPack
 Imports System.Net.Http
 Imports System.Threading
 Imports Utilities.Network
+Imports Utilities.DAL
 
 Public Class OptionChainHelper
     Implements IDisposable
@@ -29,13 +31,15 @@ Public Class OptionChainHelper
     Private ReadOnly _cts As CancellationTokenSource
     Private ReadOnly _NSEOpenChainURL As String = "https://www.nseindia.com/live_market/dynaContent/live_watch/option_chain/optionKeys.jsp?symbolCode=0&symbol={0}&symbol={0}&instrument=OPTSTK&date=-&segmentLink=17&segmentLink=17"
     Private ReadOnly _instrumentName As String
+    Private ReadOnly _filename As String
     Public Sub New(ByVal canceller As CancellationTokenSource, ByVal instrumentName As String)
         _cts = canceller
         _instrumentName = instrumentName
+        _filename = Path.Combine(My.Application.Info.DirectoryPath, "Option Chain", String.Format("{0}_{1}.csv", _instrumentName, Now.ToString("yyyyMMdd")))
     End Sub
 
-    Public Async Function GetCallsList() As Task(Of List(Of OptionChain))
-        Dim ret As List(Of OptionChain) = Nothing
+    Private Async Function GetOptionChainDataAsync() As Task(Of DataTable)
+        Dim ret As DataTable = Nothing
         Dim openPositionDataURL As String = String.Format(_NSEOpenChainURL, _instrumentName)
         Dim outputResponse As HtmlDocument = Nothing
         Dim proxyToBeUsed As HttpProxy = Nothing
@@ -145,10 +149,79 @@ Public Class OptionChainHelper
             _cts.Token.ThrowIfCancellationRequested()
             If calls IsNot Nothing AndAlso calls.Count > 0 AndAlso puts IsNot Nothing AndAlso puts.Count > 0 AndAlso calls.Count = puts.Count Then
                 _cts.Token.ThrowIfCancellationRequested()
-                ret = calls
+                OnHeartbeat("Creating table of option chain data")
+                ret = New DataTable
+                ret.Columns.Add("Calls OI")
+                ret.Columns.Add("Calls ChangeInOI")
+                ret.Columns.Add("Calls Volume")
+                ret.Columns.Add("Calls IV")
+                ret.Columns.Add("Calls LTP")
+                ret.Columns.Add("Calls NetChange")
+                ret.Columns.Add("Calls BidQuantity")
+                ret.Columns.Add("Calls BidPrice")
+                ret.Columns.Add("Calls AskPrice")
+                ret.Columns.Add("Calls AskQuantity")
+                ret.Columns.Add("StrikePrice")
+                ret.Columns.Add("Puts BidQuantity")
+                ret.Columns.Add("Puts BidPrice")
+                ret.Columns.Add("Puts AskPrice")
+                ret.Columns.Add("Puts AskQuantity")
+                ret.Columns.Add("Puts NetChange")
+                ret.Columns.Add("Puts LTP")
+                ret.Columns.Add("Puts IV")
+                ret.Columns.Add("Puts Volume")
+                ret.Columns.Add("Puts ChangeInOI")
+                ret.Columns.Add("Puts OI")
                 _cts.Token.ThrowIfCancellationRequested()
+                For runningItem As Integer = 0 To calls.Count - 1
+                    _cts.Token.ThrowIfCancellationRequested()
+                    Dim row As DataRow = ret.NewRow
+                    row("Calls OI") = If(calls(runningItem).OI <> Decimal.MinValue, calls(runningItem).OI, "-")
+                    row("Calls ChangeInOI") = If(calls(runningItem).ChangeInOI <> Decimal.MinValue, calls(runningItem).ChangeInOI, "-")
+                    row("Calls Volume") = If(calls(runningItem).Volume <> Decimal.MinValue, calls(runningItem).Volume, "-")
+                    row("Calls IV") = If(calls(runningItem).IV <> Decimal.MinValue, calls(runningItem).IV, "-")
+                    row("Calls LTP") = If(calls(runningItem).LTP <> Decimal.MinValue, calls(runningItem).LTP, "-")
+                    row("Calls NetChange") = If(calls(runningItem).NetChange <> Decimal.MinValue, calls(runningItem).NetChange, "-")
+                    row("Calls BidQuantity") = If(calls(runningItem).BidQuantity <> Decimal.MinValue, calls(runningItem).BidQuantity, "-")
+                    row("Calls BidPrice") = If(calls(runningItem).BidPrice <> Decimal.MinValue, calls(runningItem).BidPrice, "-")
+                    row("Calls AskPrice") = If(calls(runningItem).AskPrice <> Decimal.MinValue, calls(runningItem).AskPrice, "-")
+                    row("Calls AskQuantity") = If(calls(runningItem).AskQuantity <> Decimal.MinValue, calls(runningItem).AskQuantity, "-")
+                    row("StrikePrice") = If(calls(runningItem).StrikePrice <> Decimal.MinValue, calls(runningItem).StrikePrice, "-")
+                    row("Puts BidQuantity") = If(puts(runningItem).BidQuantity <> Decimal.MinValue, puts(runningItem).BidQuantity, "-")
+                    row("Puts BidPrice") = If(puts(runningItem).BidPrice <> Decimal.MinValue, puts(runningItem).BidPrice, "-")
+                    row("Puts AskPrice") = If(puts(runningItem).AskPrice <> Decimal.MinValue, puts(runningItem).AskPrice, "-")
+                    row("Puts AskQuantity") = If(puts(runningItem).AskQuantity <> Decimal.MinValue, puts(runningItem).AskQuantity, "-")
+                    row("Puts NetChange") = If(puts(runningItem).NetChange <> Decimal.MinValue, puts(runningItem).NetChange, "-")
+                    row("Puts LTP") = If(puts(runningItem).LTP <> Decimal.MinValue, puts(runningItem).LTP, "-")
+                    row("Puts IV") = If(puts(runningItem).IV <> Decimal.MinValue, puts(runningItem).IV, "-")
+                    row("Puts Volume") = If(puts(runningItem).Volume <> Decimal.MinValue, puts(runningItem).Volume, "-")
+                    row("Puts ChangeInOI") = If(puts(runningItem).ChangeInOI <> Decimal.MinValue, puts(runningItem).ChangeInOI, "-")
+                    row("Puts OI") = If(puts(runningItem).OI <> Decimal.MinValue, puts(runningItem).OI, "-")
+                    ret.Rows.Add(row)
+                Next
             End If
             _cts.Token.ThrowIfCancellationRequested()
+        End If
+        Return ret
+    End Function
+
+    Public Async Function GetDataAsync() As Task(Of List(Of OptionChain))
+        Dim ret As List(Of OptionChain) = Nothing
+        Dim optionChainData As DataTable = Nothing
+        If File.Exists(_filename) Then
+            Using csvhlpr As New CSVHelper(_filename, ",", _cts)
+                optionChainData = csvhlpr.GetDataTableFromCSV(1)
+            End Using
+        Else
+            optionChainData = Await GetOptionChainDataAsync().ConfigureAwait(False)
+            If optionChainData IsNot Nothing Then
+                Using csvhlpr As New CSVHelper(_filename, ",", _cts)
+                    csvhlpr.GetCSVFromDataTable(optionChainData)
+                End Using
+            End If
+        End If
+        If optionChainData IsNot Nothing Then
+
         End If
         Return ret
     End Function
