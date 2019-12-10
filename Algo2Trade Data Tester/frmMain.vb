@@ -287,15 +287,17 @@ Public Class frmMain
                                         If optionPayloads Is Nothing Then optionPayloads = New Dictionary(Of Date, PairPayload)
                                         optionPayloads.Add(runningPayload.PayloadDate, New PairPayload With {.Instrument1Payload = runningPayload})
                                     Next
-
-                                    Dim instrument2Payloads As Dictionary(Of Date, Payload) = Await cmn.GetHistoricalDataForSpecificTradingSymbolAsync(Common.DataBaseTable.Intraday_Futures, optionStocks(runningStock).Instrument2, lastTradingDate.Date, lastTradingDate.Date).ConfigureAwait(False)
-                                    If instrument2Payloads IsNot Nothing AndAlso instrument2Payloads.Count > 0 Then
-                                        For Each runningPayload In optionPayloads
-                                            If instrument2Payloads.ContainsKey(runningPayload.Key) Then
-                                                optionPayloads(runningPayload.Key).Instrument2Payload = instrument2Payloads(runningPayload.Key)
-                                            End If
-                                        Next
-                                    End If
+                                End If
+                                Dim instrument2Payloads As Dictionary(Of Date, Payload) = Await cmn.GetHistoricalDataForSpecificTradingSymbolAsync(Common.DataBaseTable.Intraday_Futures, optionStocks(runningStock).Instrument2, lastTradingDate.Date, lastTradingDate.Date).ConfigureAwait(False)
+                                If instrument2Payloads IsNot Nothing AndAlso instrument2Payloads.Count > 0 Then
+                                    For Each runningPayload In instrument2Payloads.Values
+                                        If optionPayloads Is Nothing Then optionPayloads = New Dictionary(Of Date, PairPayload)
+                                        If optionPayloads.ContainsKey(runningPayload.PayloadDate) Then
+                                            optionPayloads(runningPayload.PayloadDate).Instrument2Payload = runningPayload
+                                        Else
+                                            optionPayloads.Add(runningPayload.PayloadDate, New PairPayload With {.Instrument2Payload = runningPayload})
+                                        End If
+                                    Next
                                 End If
                                 If optionPayloads IsNot Nothing AndAlso optionPayloads.Count > 0 Then
                                     OnHeartbeat("Writing Excel")
@@ -318,7 +320,7 @@ Public Class frmMain
                             Dim rowCounter As Integer = 2
                             For Each runningSheet In sheetList
                                 excelWriter.SetData(rowCounter, 1, runningSheet)
-                                excelWriter.SetCellFormula(rowCounter, 1, String.Format("={0}!AE3", runningSheet))
+                                excelWriter.SetCellFormula(rowCounter, 2, String.Format("={0}!AE3", runningSheet))
                                 rowCounter += 1
                             Next
                         End If
