@@ -33,6 +33,8 @@ Partial Class frmMain
         Me.cmbSymbol = New System.Windows.Forms.ComboBox()
         Me.Label1 = New System.Windows.Forms.Label()
         Me.lblMainProgress = New System.Windows.Forms.Label()
+        Me.txtAvrgSprdPrcntg = New System.Windows.Forms.TextBox()
+        Me.lblAvrgSprdPrcntg = New System.Windows.Forms.Label()
         Me.SuspendLayout()
         '
         'lblProgress
@@ -95,7 +97,7 @@ Partial Class frmMain
         Me.cmbSymbol.FormattingEnabled = True
         Me.cmbSymbol.Location = New System.Drawing.Point(115, 17)
         Me.cmbSymbol.Name = "cmbSymbol"
-        Me.cmbSymbol.Size = New System.Drawing.Size(430, 24)
+        Me.cmbSymbol.Size = New System.Drawing.Size(320, 24)
         Me.cmbSymbol.TabIndex = 6
         '
         'Label1
@@ -114,11 +116,30 @@ Partial Class frmMain
         Me.lblMainProgress.Size = New System.Drawing.Size(695, 27)
         Me.lblMainProgress.TabIndex = 10
         '
+        'txtAvrgSprdPrcntg
+        '
+        Me.txtAvrgSprdPrcntg.Location = New System.Drawing.Point(604, 18)
+        Me.txtAvrgSprdPrcntg.Name = "txtAvrgSprdPrcntg"
+        Me.txtAvrgSprdPrcntg.Size = New System.Drawing.Size(69, 22)
+        Me.txtAvrgSprdPrcntg.TabIndex = 12
+        Me.txtAvrgSprdPrcntg.Text = "1"
+        '
+        'lblAvrgSprdPrcntg
+        '
+        Me.lblAvrgSprdPrcntg.AutoSize = True
+        Me.lblAvrgSprdPrcntg.Location = New System.Drawing.Point(469, 19)
+        Me.lblAvrgSprdPrcntg.Name = "lblAvrgSprdPrcntg"
+        Me.lblAvrgSprdPrcntg.Size = New System.Drawing.Size(127, 17)
+        Me.lblAvrgSprdPrcntg.TabIndex = 11
+        Me.lblAvrgSprdPrcntg.Text = "Average Spread %"
+        '
         'frmMain
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(8.0!, 16.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(750, 418)
+        Me.Controls.Add(Me.txtAvrgSprdPrcntg)
+        Me.Controls.Add(Me.lblAvrgSprdPrcntg)
         Me.Controls.Add(Me.lblMainProgress)
         Me.Controls.Add(Me.Label1)
         Me.Controls.Add(Me.cmbSymbol)
@@ -148,4 +169,6 @@ Partial Class frmMain
     Friend WithEvents cmbSymbol As ComboBox
     Friend WithEvents Label1 As Label
     Friend WithEvents lblMainProgress As Label
+    Friend WithEvents txtAvrgSprdPrcntg As TextBox
+    Friend WithEvents lblAvrgSprdPrcntg As Label
 End Class

@@ -213,6 +213,7 @@ Public Class frmMain
             AddHandler cmn.WaitingFor, AddressOf OnWaitingFor
             AddHandler cmn.DocumentRetryStatus, AddressOf OnDocumentRetryStatus
 
+            Dim maxAvrgSprd As Decimal = GetTextBoxText_ThreadSafe(txtAvrgSprdPrcntg)
             Dim templateFile As String = GetTextBoxText_ThreadSafe(txtFilePath)
             Dim outputFilename As String = Path.Combine(My.Application.Info.DirectoryPath, "Output", "Output File.xlsx")
             OnHeartbeat("File Copy in progress")
@@ -261,7 +262,7 @@ Public Class frmMain
                                 Dim secondCallSpreadPercentage As Decimal = (Math.Abs(secondCall.AskPrice - secondCall.BidPrice) / secondCall.AskPrice) * 100
                                 Dim thirdCallSpreadPercentage As Decimal = (Math.Abs(thirdCall.AskPrice - thirdCall.BidPrice) / thirdCall.AskPrice) * 100
                                 Dim averageSpreadPercentage As Decimal = (firstCallSpreadPercentage + secondCallSpreadPercentage + thirdCallSpreadPercentage) / 3
-                                If averageSpreadPercentage < 1 Then
+                                If averageSpreadPercentage < maxAvrgSprd Then
                                     Dim peStrikePrice As Decimal = callsList.FindAll(Function(x)
                                                                                          Return x.StrikePrice <= openPrice
                                                                                      End Function).LastOrDefault.StrikePrice
