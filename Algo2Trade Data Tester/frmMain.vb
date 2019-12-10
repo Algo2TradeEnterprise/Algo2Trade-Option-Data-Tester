@@ -224,7 +224,7 @@ Public Class frmMain
                 Dim optionStocks As Dictionary(Of String, PairInstrumentDetails) = Nothing
                 Dim lastTradingDate As Date = Date.MinValue
                 Dim ctr As Integer = 0
-                For Each runningStock In instrumentList.Take(10)
+                For Each runningStock In instrumentList
                     ctr += 1
                     SetLabelText_ThreadSafe(lblMainProgress, String.Format("Processing Option Chain Data for {0} ({1}/{2})", runningStock, ctr, instrumentList.Count))
                     _canceller.Token.ThrowIfCancellationRequested()
