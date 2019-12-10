@@ -320,7 +320,7 @@ Public Class frmMain
                             Dim rowCounter As Integer = 2
                             For Each runningSheet In sheetList
                                 excelWriter.SetData(rowCounter, 1, runningSheet)
-                                excelWriter.SetCellFormula(rowCounter, 2, String.Format("={0}!AE3", runningSheet))
+                                excelWriter.SetCellFormula(rowCounter, 2, String.Format("='{0}'!AE3", runningSheet))
                                 rowCounter += 1
                             Next
                         End If
