@@ -376,7 +376,7 @@ Public Class frmMain
                     columnCounter = instrument1StartingColumn
                     mainRawData(rowCounter, columnCounter) = runningData.Value.Instrument1Payload.TradingSymbol
                     columnCounter += 1
-                    mainRawData(rowCounter, columnCounter) = runningData.Value.Instrument1Payload.PayloadDate
+                    mainRawData(rowCounter, columnCounter) = runningData.Value.Instrument1Payload.PayloadDate.ToString("yyyy-MM-dd HH:mm:ss")
                     columnCounter += 1
                     mainRawData(rowCounter, columnCounter) = runningData.Value.Instrument1Payload.Open
                     columnCounter += 1
@@ -393,7 +393,7 @@ Public Class frmMain
                     columnCounter = instrument1StartingColumn
                     mainRawData(rowCounter, columnCounter) = lastInstrument1Data.TradingSymbol
                     columnCounter += 1
-                    mainRawData(rowCounter, columnCounter) = runningData.Key
+                    mainRawData(rowCounter, columnCounter) = runningData.Key.ToString("yyyy-MM-dd HH:mm:ss")
                     columnCounter += 1
                     mainRawData(rowCounter, columnCounter) = ""
                     columnCounter += 1
@@ -410,7 +410,7 @@ Public Class frmMain
                     columnCounter = instrument2StartingColumn
                     mainRawData(rowCounter, columnCounter) = runningData.Value.Instrument2Payload.TradingSymbol
                     columnCounter += 1
-                    mainRawData(rowCounter, columnCounter) = runningData.Value.Instrument2Payload.PayloadDate
+                    mainRawData(rowCounter, columnCounter) = runningData.Value.Instrument2Payload.PayloadDate.ToString("yyyy-MM-dd HH:mm:ss")
                     columnCounter += 1
                     mainRawData(rowCounter, columnCounter) = runningData.Value.Instrument2Payload.Open
                     columnCounter += 1
@@ -427,7 +427,7 @@ Public Class frmMain
                     columnCounter = instrument2StartingColumn
                     mainRawData(rowCounter, columnCounter) = lastInstrument2Data.TradingSymbol
                     columnCounter += 1
-                    mainRawData(rowCounter, columnCounter) = runningData.Key
+                    mainRawData(rowCounter, columnCounter) = runningData.Key.ToString("yyyy-MM-dd HH:mm:ss")
                     columnCounter += 1
                     mainRawData(rowCounter, columnCounter) = ""
                     columnCounter += 1
