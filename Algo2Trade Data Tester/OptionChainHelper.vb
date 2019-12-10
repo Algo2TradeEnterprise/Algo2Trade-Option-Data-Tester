@@ -199,6 +199,9 @@ Public Class OptionChainHelper
                     row("Puts OI") = If(puts(runningItem).OI <> Decimal.MinValue, puts(runningItem).OI, "-")
                     ret.Rows.Add(row)
                 Next
+                Using csvhlpr As New CSVHelper(_filename, ",", _cts)
+                    csvhlpr.GetCSVFromDataTable(ret)
+                End Using
             End If
             _cts.Token.ThrowIfCancellationRequested()
         End If
@@ -208,18 +211,12 @@ Public Class OptionChainHelper
     Public Async Function GetDataAsync() As Task(Of List(Of OptionChain))
         Dim ret As List(Of OptionChain) = Nothing
         Dim optionChainData As DataTable = Nothing
-        If File.Exists(_filename) Then
-            Using csvhlpr As New CSVHelper(_filename, ",", _cts)
-                optionChainData = csvhlpr.GetDataTableFromCSV(1)
-            End Using
-        Else
-            optionChainData = Await GetOptionChainDataAsync().ConfigureAwait(False)
-            If optionChainData IsNot Nothing Then
-                Using csvhlpr As New CSVHelper(_filename, ",", _cts)
-                    csvhlpr.GetCSVFromDataTable(optionChainData)
-                End Using
-            End If
+        If Not File.Exists(_filename) Then
+            Await GetOptionChainDataAsync().ConfigureAwait(False)
         End If
+        Using csvhlpr As New CSVHelper(_filename, ",", _cts)
+            optionChainData = csvhlpr.GetDataTableFromCSV(0)
+        End Using
         If optionChainData IsNot Nothing Then
 
         End If
