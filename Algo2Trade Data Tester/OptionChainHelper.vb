@@ -34,8 +34,8 @@ Public Class OptionChainHelper
         _instrumentName = instrumentName
     End Sub
 
-    Public Async Function GetStrikePriceList() As Task(Of List(Of Decimal))
-        Dim ret As List(Of Decimal) = Nothing
+    Public Async Function GetCallsList() As Task(Of List(Of OptionChain))
+        Dim ret As List(Of OptionChain) = Nothing
         Dim openPositionDataURL As String = String.Format(_NSEOpenChainURL, _instrumentName)
         Dim outputResponse As HtmlDocument = Nothing
         Dim proxyToBeUsed As HttpProxy = Nothing
@@ -145,11 +145,7 @@ Public Class OptionChainHelper
             _cts.Token.ThrowIfCancellationRequested()
             If calls IsNot Nothing AndAlso calls.Count > 0 AndAlso puts IsNot Nothing AndAlso puts.Count > 0 AndAlso calls.Count = puts.Count Then
                 _cts.Token.ThrowIfCancellationRequested()
-                For Each item In calls
-                    _cts.Token.ThrowIfCancellationRequested()
-                    If ret Is Nothing Then ret = New List(Of Decimal)
-                    ret.Add(item.StrikePrice)
-                Next
+                ret = calls
                 _cts.Token.ThrowIfCancellationRequested()
             End If
             _cts.Token.ThrowIfCancellationRequested()

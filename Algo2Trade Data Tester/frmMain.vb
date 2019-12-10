@@ -234,14 +234,14 @@ Public Class frmMain
                         Dim openPrice As Decimal = stockPayload.LastOrDefault.Value.Open
                         Dim tradingSymbol As String = stockPayload.LastOrDefault.Value.TradingSymbol
                         lastTradingDate = stockPayload.LastOrDefault.Value.PayloadDate
-                        Dim strikePriceList As List(Of Decimal) = Nothing
+                        Dim callsList As List(Of OptionChain) = Nothing
                         Using optnChnHlpr As New OptionChainHelper(_canceller, runningStock)
                             AddHandler optnChnHlpr.DocumentDownloadComplete, AddressOf OnDocumentDownloadComplete
                             AddHandler optnChnHlpr.Heartbeat, AddressOf OnHeartbeat
                             AddHandler optnChnHlpr.WaitingFor, AddressOf OnWaitingFor
                             AddHandler optnChnHlpr.DocumentRetryStatus, AddressOf OnDocumentRetryStatus
 
-                            strikePriceList = Await optnChnHlpr.GetStrikePriceList().ConfigureAwait(False)
+                            callsList = Await optnChnHlpr.GetCallsList().ConfigureAwait(False)
 
                             RemoveHandler optnChnHlpr.DocumentDownloadComplete, AddressOf OnDocumentDownloadComplete
                             RemoveHandler optnChnHlpr.Heartbeat, AddressOf OnHeartbeat
@@ -249,21 +249,41 @@ Public Class frmMain
                             RemoveHandler optnChnHlpr.DocumentRetryStatus, AddressOf OnDocumentRetryStatus
                         End Using
                         _canceller.Token.ThrowIfCancellationRequested()
-                        If strikePriceList IsNot Nothing AndAlso strikePriceList.Count > 0 Then
-                            Dim peStrikePrice As Decimal = strikePriceList.FindAll(Function(x)
-                                                                                       Return x <= openPrice
-                                                                                   End Function).LastOrDefault
-                            _canceller.Token.ThrowIfCancellationRequested()
-                            Dim ceStrikePrice As Decimal = strikePriceList.FindAll(Function(x)
-                                                                                       Return x > openPrice
-                                                                                   End Function).FirstOrDefault
+                        If callsList IsNot Nothing AndAlso callsList.Count > 0 Then
+                            Dim potentialCalls As List(Of OptionChain) = callsList.FindAll(Function(x)
+                                                                                               Return x.StrikePrice > openPrice
+                                                                                           End Function)
+                            If potentialCalls IsNot Nothing AndAlso potentialCalls.Count >= 3 Then
+                                Dim firstCall As OptionChain = potentialCalls.Item(0)
+                                Dim secondCall As OptionChain = potentialCalls.Item(1)
+                                Dim thirdCall As OptionChain = potentialCalls.Item(2)
+                                Dim firstCallSpreadPercentage As Decimal = (Math.Abs(firstCall.AskPrice - firstCall.BidPrice) / firstCall.AskPrice) * 100
+                                Dim secondCallSpreadPercentage As Decimal = (Math.Abs(secondCall.AskPrice - secondCall.BidPrice) / secondCall.AskPrice) * 100
+                                Dim thirdCallSpreadPercentage As Decimal = (Math.Abs(thirdCall.AskPrice - thirdCall.BidPrice) / thirdCall.AskPrice) * 100
+                                Dim averageSpreadPercentage As Decimal = (firstCallSpreadPercentage + secondCallSpreadPercentage + thirdCallSpreadPercentage) / 3
+                                If averageSpreadPercentage < 1 Then
+                                    Dim peStrikePrice As Decimal = callsList.FindAll(Function(x)
+                                                                                         Return x.StrikePrice <= openPrice
+                                                                                     End Function).LastOrDefault.StrikePrice
+                                    _canceller.Token.ThrowIfCancellationRequested()
+                                    Dim ceStrikePrice As Decimal = callsList.FindAll(Function(x)
+                                                                                         Return x.StrikePrice > openPrice
+                                                                                     End Function).FirstOrDefault.StrikePrice
 
-                            _canceller.Token.ThrowIfCancellationRequested()
-                            Dim peStockName As String = tradingSymbol.Replace("FUT", String.Format("{0}PE", peStrikePrice.ToString("0.####")))
-                            Dim ceStockName As String = tradingSymbol.Replace("FUT", String.Format("{0}CE", ceStrikePrice.ToString("0.####")))
-                            Dim lotsize As Integer = cmn.GetLotSize(Common.DataBaseTable.EOD_Futures, tradingSymbol, lastTradingDate)
-                            If optionStocks Is Nothing Then optionStocks = New Dictionary(Of String, PairInstrumentDetails)
-                            optionStocks.Add(runningStock, New PairInstrumentDetails With {.Instrument1 = peStockName, .Instrument2 = ceStockName, .LotSize = lotsize})
+                                    _canceller.Token.ThrowIfCancellationRequested()
+                                    Dim peStockName As String = tradingSymbol.Replace("FUT", String.Format("{0}PE", peStrikePrice.ToString("0.####")))
+                                    Dim ceStockName As String = tradingSymbol.Replace("FUT", String.Format("{0}CE", ceStrikePrice.ToString("0.####")))
+                                    Dim lotsize As Integer = cmn.GetLotSize(Common.DataBaseTable.EOD_Futures, tradingSymbol, lastTradingDate)
+                                    If optionStocks Is Nothing Then optionStocks = New Dictionary(Of String, PairInstrumentDetails)
+                                    optionStocks.Add(runningStock, New PairInstrumentDetails With {.Instrument1 = peStockName, .Instrument2 = ceStockName, .LotSize = lotsize})
+                                Else
+                                    Console.WriteLine(String.Format("Stock Neglected:{0}", runningStock))
+                                    Console.WriteLine(String.Format("First Call:{0},{1},{2},{3}", firstCall.StrikePrice, firstCall.BidPrice, firstCall.AskPrice, firstCallSpreadPercentage))
+                                    Console.WriteLine(String.Format("Second Call:{0},{1},{2},{3}", secondCall.StrikePrice, secondCall.BidPrice, secondCall.AskPrice, secondCallSpreadPercentage))
+                                    Console.WriteLine(String.Format("Third Call:{0},{1},{2},{3}", thirdCall.StrikePrice, thirdCall.BidPrice, thirdCall.AskPrice, thirdCallSpreadPercentage))
+                                    Console.WriteLine(String.Format("Average Spread:{0}%", Math.Round(averageSpreadPercentage, 4)))
+                                End If
+                            End If
                         End If
                     End If
                 Next
