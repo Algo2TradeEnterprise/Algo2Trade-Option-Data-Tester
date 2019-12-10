@@ -259,8 +259,8 @@ Public Class frmMain
                                                                                    End Function).FirstOrDefault
 
                             _canceller.Token.ThrowIfCancellationRequested()
-                            Dim peStockName As String = tradingSymbol.Replace("FUT", String.Format("{0}PE", CInt(peStrikePrice)))
-                            Dim ceStockName As String = tradingSymbol.Replace("FUT", String.Format("{0}CE", CInt(ceStrikePrice)))
+                            Dim peStockName As String = tradingSymbol.Replace("FUT", String.Format("{0}PE", peStrikePrice.ToString("0.####")))
+                            Dim ceStockName As String = tradingSymbol.Replace("FUT", String.Format("{0}CE", ceStrikePrice.ToString("0.####")))
                             Dim lotsize As Integer = cmn.GetLotSize(Common.DataBaseTable.EOD_Futures, tradingSymbol, lastTradingDate)
                             If optionStocks Is Nothing Then optionStocks = New Dictionary(Of String, PairInstrumentDetails)
                             optionStocks.Add(runningStock, New PairInstrumentDetails With {.Instrument1 = peStockName, .Instrument2 = ceStockName, .LotSize = lotsize})
@@ -389,7 +389,7 @@ Public Class frmMain
                     mainRawData(rowCounter, columnCounter) = runningData.Value.Instrument1Payload.Volume
 
                     lastInstrument1Data = runningData.Value.Instrument1Payload
-                Else
+                ElseIf lastInstrument1Data IsNot Nothing Then
                     columnCounter = instrument1StartingColumn
                     mainRawData(rowCounter, columnCounter) = lastInstrument1Data.TradingSymbol
                     columnCounter += 1
@@ -423,7 +423,7 @@ Public Class frmMain
                     mainRawData(rowCounter, columnCounter) = runningData.Value.Instrument2Payload.Volume
 
                     lastInstrument2Data = runningData.Value.Instrument2Payload
-                Else
+                ElseIf lastInstrument2Data IsNot Nothing Then
                     columnCounter = instrument2StartingColumn
                     mainRawData(rowCounter, columnCounter) = lastInstrument2Data.TradingSymbol
                     columnCounter += 1
