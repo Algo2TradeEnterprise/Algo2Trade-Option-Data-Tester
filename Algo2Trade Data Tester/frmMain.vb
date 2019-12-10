@@ -218,20 +218,22 @@ Public Class frmMain
             OnHeartbeat("File Copy in progress")
             If File.Exists(outputFilename) Then File.Delete(outputFilename)
             File.Copy(templateFile, outputFilename)
-            Dim instrumentList As List(Of String) = cmn.GetAllStockList(Common.DataBaseTable.EOD_Futures, Now.Date)
+            Dim instrumentList As List(Of String) = cmn.GetAllStockList(Common.DataBaseTable.EOD_Futures, Now.Date.AddDays(-1))
 
             If instrumentList IsNot Nothing AndAlso instrumentList.Count > 0 Then
                 Dim optionStocks As Dictionary(Of String, List(Of String)) = Nothing
+                Dim lastTradingDate As Date = Date.MinValue
                 Dim ctr As Integer = 0
-                For Each runningStock In instrumentList
+                For Each runningStock In instrumentList.Take(10)
                     ctr += 1
                     SetLabelText_ThreadSafe(lblMainProgress, String.Format("Processing Option Chain Data for {0} ({1}/{2})", runningStock, ctr, instrumentList.Count))
                     _canceller.Token.ThrowIfCancellationRequested()
-                    Dim stockPayload As Dictionary(Of Date, Payload) = Await cmn.GetHistoricalDataAsync(Common.DataBaseTable.EOD_Futures, runningStock, Now.Date, Now.Date).ConfigureAwait(False)
+                    Dim stockPayload As Dictionary(Of Date, Payload) = Await cmn.GetHistoricalDataAsync(Common.DataBaseTable.EOD_Futures, runningStock, Now.Date.AddDays(-10), Now.Date).ConfigureAwait(False)
                     _canceller.Token.ThrowIfCancellationRequested()
                     If stockPayload IsNot Nothing AndAlso stockPayload.Count > 0 Then
                         Dim openPrice As Decimal = stockPayload.LastOrDefault.Value.Open
                         Dim tradingSymbol As String = stockPayload.LastOrDefault.Value.TradingSymbol
+                        lastTradingDate = stockPayload.LastOrDefault.Value.PayloadDate
                         Dim strikePriceList As List(Of Decimal) = Nothing
                         Using optnChnHlpr As New OptionChainHelper(_canceller, runningStock)
                             AddHandler optnChnHlpr.DocumentDownloadComplete, AddressOf OnDocumentDownloadComplete
@@ -265,7 +267,7 @@ Public Class frmMain
                     End If
                 Next
                 SetLabelText_ThreadSafe(lblMainProgress, "")
-                If optionStocks IsNot Nothing AndAlso optionStocks.Count > 0 Then
+                If optionStocks IsNot Nothing AndAlso optionStocks.Count > 0 AndAlso lastTradingDate <> Date.MinValue Then
                     OnHeartbeat("Opening Excel")
                     Using excelWriter As New ExcelHelper(outputFilename, ExcelHelper.ExcelOpenStatus.OpenExistingForReadWrite, ExcelHelper.ExcelSaveType.XLS_XLSX, _canceller)
                         AddHandler excelWriter.Heartbeat, AddressOf OnHeartbeat
@@ -278,7 +280,7 @@ Public Class frmMain
                                 Dim optionPayloads As Dictionary(Of Date, PairPayload) = Nothing
                                 Dim counter As Integer = 0
                                 For Each stock In optionStocks(runningStock)
-                                    Dim dataPayloads As Dictionary(Of Date, Payload) = Await cmn.GetHistoricalDataForSpecificTradingSymbolAsync(Common.DataBaseTable.Intraday_Futures, stock, Now.Date, Now.Date).ConfigureAwait(False)
+                                    Dim dataPayloads As Dictionary(Of Date, Payload) = Await cmn.GetHistoricalDataForSpecificTradingSymbolAsync(Common.DataBaseTable.Intraday_Futures, stock, lastTradingDate.Date, lastTradingDate.Date).ConfigureAwait(False)
                                     counter += 1
                                     If dataPayloads IsNot Nothing AndAlso dataPayloads.Count > 0 Then
                                         If counter = 1 Then

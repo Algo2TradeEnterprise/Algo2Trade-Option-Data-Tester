@@ -64,82 +64,84 @@ Public Class OptionChainHelper
             OnHeartbeat("Extracting Option Chain from HTML")
             Dim calls As List(Of OptionChain) = Nothing
             Dim puts As List(Of OptionChain) = Nothing
-            For Each table As HtmlNode In outputResponse.DocumentNode.SelectNodes("//table[@id='octable']")
-                _cts.Token.ThrowIfCancellationRequested()
-                If table IsNot Nothing AndAlso table.InnerHtml.Contains("tr") Then
-                    For Each row As HtmlNode In table.SelectNodes("tr")
-                        _cts.Token.ThrowIfCancellationRequested()
-                        If row IsNot Nothing AndAlso row.InnerHtml.Contains("td") Then
-                            Dim callData As OptionChain = Nothing
-                            Dim putData As OptionChain = Nothing
-                            Dim counter As Integer = 0
-                            For Each cell As HtmlNode In row.SelectNodes("td")
-                                _cts.Token.ThrowIfCancellationRequested()
-                                If cell IsNot Nothing AndAlso cell.InnerText IsNot Nothing AndAlso cell.InnerText <> "" Then
-                                    If cell.InnerText.Trim = "Total" Then
-                                        Exit For
+            If outputResponse.DocumentNode.SelectNodes("//table[@id='octable']") IsNot Nothing Then
+                For Each table As HtmlNode In outputResponse.DocumentNode.SelectNodes("//table[@id='octable']")
+                    _cts.Token.ThrowIfCancellationRequested()
+                    If table IsNot Nothing AndAlso table.SelectNodes("tr") IsNot Nothing Then
+                        For Each row As HtmlNode In table.SelectNodes("tr")
+                            _cts.Token.ThrowIfCancellationRequested()
+                            If row IsNot Nothing AndAlso row.SelectNodes("td") IsNot Nothing Then
+                                Dim callData As OptionChain = Nothing
+                                Dim putData As OptionChain = Nothing
+                                Dim counter As Integer = 0
+                                For Each cell As HtmlNode In row.SelectNodes("td")
+                                    _cts.Token.ThrowIfCancellationRequested()
+                                    If cell IsNot Nothing AndAlso cell.InnerText IsNot Nothing AndAlso cell.InnerText <> "" Then
+                                        If cell.InnerText.Trim = "Total" Then
+                                            Exit For
+                                        End If
+                                        If callData Is Nothing Then callData = New OptionChain
+                                        If putData Is Nothing Then putData = New OptionChain
+                                        counter += 1
+                                        If counter = 1 Then
+                                            callData.OI = If(cell.InnerText.Trim = "-", Decimal.MinValue, cell.InnerText.Trim)
+                                        ElseIf counter = 2 Then
+                                            callData.ChangeInOI = If(cell.InnerText.Trim = "-", Decimal.MinValue, cell.InnerText.Trim)
+                                        ElseIf counter = 3 Then
+                                            callData.Volume = If(cell.InnerText.Trim = "-", Decimal.MinValue, cell.InnerText.Trim)
+                                        ElseIf counter = 4 Then
+                                            callData.IV = If(cell.InnerText.Trim = "-", Decimal.MinValue, cell.InnerText.Trim)
+                                        ElseIf counter = 5 Then
+                                            callData.LTP = If(cell.InnerText.Trim = "-", Decimal.MinValue, cell.InnerText.Trim)
+                                        ElseIf counter = 6 Then
+                                            callData.NetChange = If(cell.InnerText.Trim = "-", Decimal.MinValue, cell.InnerText.Trim)
+                                        ElseIf counter = 7 Then
+                                            callData.BidQuantity = If(cell.InnerText.Trim = "-", Decimal.MinValue, cell.InnerText.Trim)
+                                        ElseIf counter = 8 Then
+                                            callData.BidPrice = If(cell.InnerText.Trim = "-", Decimal.MinValue, cell.InnerText.Trim)
+                                        ElseIf counter = 9 Then
+                                            callData.AskPrice = If(cell.InnerText.Trim = "-", Decimal.MinValue, cell.InnerText.Trim)
+                                        ElseIf counter = 10 Then
+                                            callData.AskQuantity = If(cell.InnerText.Trim = "-", Decimal.MinValue, cell.InnerText.Trim)
+                                        ElseIf counter = 11 Then
+                                            callData.StrikePrice = If(cell.InnerText.Trim = "-", Decimal.MinValue, cell.InnerText.Trim)
+                                            putData.StrikePrice = If(cell.InnerText.Trim = "-", Decimal.MinValue, cell.InnerText.Trim)
+                                        ElseIf counter = 12 Then
+                                            putData.BidQuantity = If(cell.InnerText.Trim = "-", Decimal.MinValue, cell.InnerText.Trim)
+                                        ElseIf counter = 13 Then
+                                            putData.BidPrice = If(cell.InnerText.Trim = "-", Decimal.MinValue, cell.InnerText.Trim)
+                                        ElseIf counter = 14 Then
+                                            putData.AskPrice = If(cell.InnerText.Trim = "-", Decimal.MinValue, cell.InnerText.Trim)
+                                        ElseIf counter = 15 Then
+                                            putData.AskQuantity = If(cell.InnerText.Trim = "-", Decimal.MinValue, cell.InnerText.Trim)
+                                        ElseIf counter = 16 Then
+                                            putData.NetChange = If(cell.InnerText.Trim = "-", Decimal.MinValue, cell.InnerText.Trim)
+                                        ElseIf counter = 17 Then
+                                            putData.LTP = If(cell.InnerText.Trim = "-", Decimal.MinValue, cell.InnerText.Trim)
+                                        ElseIf counter = 18 Then
+                                            putData.IV = If(cell.InnerText.Trim = "-", Decimal.MinValue, cell.InnerText.Trim)
+                                        ElseIf counter = 19 Then
+                                            putData.Volume = If(cell.InnerText.Trim = "-", Decimal.MinValue, cell.InnerText.Trim)
+                                        ElseIf counter = 20 Then
+                                            putData.ChangeInOI = If(cell.InnerText.Trim = "-", Decimal.MinValue, cell.InnerText.Trim)
+                                        ElseIf counter = 21 Then
+                                            putData.OI = If(cell.InnerText.Trim = "-", Decimal.MinValue, cell.InnerText.Trim)
+                                        End If
                                     End If
-                                    If callData Is Nothing Then callData = New OptionChain
-                                    If putData Is Nothing Then putData = New OptionChain
-                                    counter += 1
-                                    If counter = 1 Then
-                                        callData.OI = If(cell.InnerText.Trim = "-", Decimal.MinValue, cell.InnerText.Trim)
-                                    ElseIf counter = 2 Then
-                                        callData.ChangeInOI = If(cell.InnerText.Trim = "-", Decimal.MinValue, cell.InnerText.Trim)
-                                    ElseIf counter = 3 Then
-                                        callData.Volume = If(cell.InnerText.Trim = "-", Decimal.MinValue, cell.InnerText.Trim)
-                                    ElseIf counter = 4 Then
-                                        callData.IV = If(cell.InnerText.Trim = "-", Decimal.MinValue, cell.InnerText.Trim)
-                                    ElseIf counter = 5 Then
-                                        callData.LTP = If(cell.InnerText.Trim = "-", Decimal.MinValue, cell.InnerText.Trim)
-                                    ElseIf counter = 6 Then
-                                        callData.NetChange = If(cell.InnerText.Trim = "-", Decimal.MinValue, cell.InnerText.Trim)
-                                    ElseIf counter = 7 Then
-                                        callData.BidQuantity = If(cell.InnerText.Trim = "-", Decimal.MinValue, cell.InnerText.Trim)
-                                    ElseIf counter = 8 Then
-                                        callData.BidPrice = If(cell.InnerText.Trim = "-", Decimal.MinValue, cell.InnerText.Trim)
-                                    ElseIf counter = 9 Then
-                                        callData.AskPrice = If(cell.InnerText.Trim = "-", Decimal.MinValue, cell.InnerText.Trim)
-                                    ElseIf counter = 10 Then
-                                        callData.AskQuantity = If(cell.InnerText.Trim = "-", Decimal.MinValue, cell.InnerText.Trim)
-                                    ElseIf counter = 11 Then
-                                        callData.StrikePrice = If(cell.InnerText.Trim = "-", Decimal.MinValue, cell.InnerText.Trim)
-                                        putData.StrikePrice = If(cell.InnerText.Trim = "-", Decimal.MinValue, cell.InnerText.Trim)
-                                    ElseIf counter = 12 Then
-                                        putData.BidQuantity = If(cell.InnerText.Trim = "-", Decimal.MinValue, cell.InnerText.Trim)
-                                    ElseIf counter = 13 Then
-                                        putData.BidPrice = If(cell.InnerText.Trim = "-", Decimal.MinValue, cell.InnerText.Trim)
-                                    ElseIf counter = 14 Then
-                                        putData.AskPrice = If(cell.InnerText.Trim = "-", Decimal.MinValue, cell.InnerText.Trim)
-                                    ElseIf counter = 15 Then
-                                        putData.AskQuantity = If(cell.InnerText.Trim = "-", Decimal.MinValue, cell.InnerText.Trim)
-                                    ElseIf counter = 16 Then
-                                        putData.NetChange = If(cell.InnerText.Trim = "-", Decimal.MinValue, cell.InnerText.Trim)
-                                    ElseIf counter = 17 Then
-                                        putData.LTP = If(cell.InnerText.Trim = "-", Decimal.MinValue, cell.InnerText.Trim)
-                                    ElseIf counter = 18 Then
-                                        putData.IV = If(cell.InnerText.Trim = "-", Decimal.MinValue, cell.InnerText.Trim)
-                                    ElseIf counter = 19 Then
-                                        putData.Volume = If(cell.InnerText.Trim = "-", Decimal.MinValue, cell.InnerText.Trim)
-                                    ElseIf counter = 20 Then
-                                        putData.ChangeInOI = If(cell.InnerText.Trim = "-", Decimal.MinValue, cell.InnerText.Trim)
-                                    ElseIf counter = 21 Then
-                                        putData.OI = If(cell.InnerText.Trim = "-", Decimal.MinValue, cell.InnerText.Trim)
-                                    End If
+                                Next
+                                If callData IsNot Nothing Then
+                                    If calls Is Nothing Then calls = New List(Of OptionChain)
+                                    calls.Add(callData)
                                 End If
-                            Next
-                            If callData IsNot Nothing Then
-                                If calls Is Nothing Then calls = New List(Of OptionChain)
-                                calls.Add(callData)
+                                If putData IsNot Nothing Then
+                                    If puts Is Nothing Then puts = New List(Of OptionChain)
+                                    puts.Add(putData)
+                                End If
                             End If
-                            If putData IsNot Nothing Then
-                                If puts Is Nothing Then puts = New List(Of OptionChain)
-                                puts.Add(putData)
-                            End If
-                        End If
-                    Next
-                End If
-            Next
+                        Next
+                    End If
+                Next
+            End If
             _cts.Token.ThrowIfCancellationRequested()
             If calls IsNot Nothing AndAlso calls.Count > 0 AndAlso puts IsNot Nothing AndAlso puts.Count > 0 AndAlso calls.Count = puts.Count Then
                 _cts.Token.ThrowIfCancellationRequested()
