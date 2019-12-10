@@ -370,7 +370,9 @@ Public Class frmMain
             Dim dateCtr As Integer = 0
             Dim lastInstrument1Data As Payload = Nothing
             Dim lastInstrument2Data As Payload = Nothing
-            For Each runningData In dataToWrite
+            For Each runningData In dataToWrite.OrderBy(Function(x)
+                                                            Return x.Key
+                                                        End Function)
                 dateCtr += 1
                 OnHeartbeat(String.Format("Excel printing for Date: {0} [{1} of {2}]", runningData.Key.Date.ToShortDateString, dateCtr, dataToWrite.Count))
 
