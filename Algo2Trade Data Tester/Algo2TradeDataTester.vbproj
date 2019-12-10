@@ -104,6 +104,7 @@
     </Compile>
     <Compile Include="OptionChain.vb" />
     <Compile Include="OptionChainHelper.vb" />
+    <Compile Include="PairInstrumentDetails.vb" />
     <Compile Include="PairPayload.vb" />
   </ItemGroup>
   <ItemGroup>

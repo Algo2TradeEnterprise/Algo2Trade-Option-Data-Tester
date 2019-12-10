@@ -214,14 +214,14 @@ Public Class frmMain
             AddHandler cmn.DocumentRetryStatus, AddressOf OnDocumentRetryStatus
 
             Dim templateFile As String = GetTextBoxText_ThreadSafe(txtFilePath)
-            Dim outputFilename As String = Path.Combine(My.Application.Info.DirectoryPath, "Output File.xlsx")
+            Dim outputFilename As String = Path.Combine(My.Application.Info.DirectoryPath, "Output", "Output File.xlsx")
             OnHeartbeat("File Copy in progress")
             If File.Exists(outputFilename) Then File.Delete(outputFilename)
             File.Copy(templateFile, outputFilename)
             Dim instrumentList As List(Of String) = cmn.GetAllStockList(Common.DataBaseTable.EOD_Futures, Now.Date.AddDays(-1))
 
             If instrumentList IsNot Nothing AndAlso instrumentList.Count > 0 Then
-                Dim optionStocks As Dictionary(Of String, List(Of String)) = Nothing
+                Dim optionStocks As Dictionary(Of String, PairInstrumentDetails) = Nothing
                 Dim lastTradingDate As Date = Date.MinValue
                 Dim ctr As Integer = 0
                 For Each runningStock In instrumentList.Take(10)
@@ -261,8 +261,9 @@ Public Class frmMain
                             _canceller.Token.ThrowIfCancellationRequested()
                             Dim peStockName As String = tradingSymbol.Replace("FUT", String.Format("{0}PE", CInt(peStrikePrice)))
                             Dim ceStockName As String = tradingSymbol.Replace("FUT", String.Format("{0}CE", CInt(ceStrikePrice)))
-                            If optionStocks Is Nothing Then optionStocks = New Dictionary(Of String, List(Of String))
-                            optionStocks.Add(runningStock, New List(Of String) From {peStockName, ceStockName})
+                            Dim lotsize As Integer = cmn.GetLotSize(Common.DataBaseTable.EOD_Futures, tradingSymbol, lastTradingDate)
+                            If optionStocks Is Nothing Then optionStocks = New Dictionary(Of String, PairInstrumentDetails)
+                            optionStocks.Add(runningStock, New PairInstrumentDetails With {.Instrument1 = peStockName, .Instrument2 = ceStockName, .LotSize = lotsize})
                         End If
                     End If
                 Next
@@ -278,28 +279,26 @@ Public Class frmMain
                             SetLabelText_ThreadSafe(lblMainProgress, String.Format("Processing for {0} ({1}/{2})", runningStock, stockCounter, optionStocks.Count))
                             If optionStocks(runningStock) IsNot Nothing Then
                                 Dim optionPayloads As Dictionary(Of Date, PairPayload) = Nothing
-                                Dim counter As Integer = 0
-                                For Each stock In optionStocks(runningStock)
-                                    Dim dataPayloads As Dictionary(Of Date, Payload) = Await cmn.GetHistoricalDataForSpecificTradingSymbolAsync(Common.DataBaseTable.Intraday_Futures, stock, lastTradingDate.Date, lastTradingDate.Date).ConfigureAwait(False)
-                                    counter += 1
-                                    If dataPayloads IsNot Nothing AndAlso dataPayloads.Count > 0 Then
-                                        If counter = 1 Then
-                                            For Each runningPayload In dataPayloads.Values
-                                                If optionPayloads Is Nothing Then optionPayloads = New Dictionary(Of Date, PairPayload)
-                                                optionPayloads.Add(runningPayload.PayloadDate, New PairPayload With {.Instrument1Payload = runningPayload})
-                                            Next
-                                        ElseIf counter = 2 Then
-                                            For Each runningPayload In optionPayloads
-                                                If dataPayloads.ContainsKey(runningPayload.Key) Then
-                                                    optionPayloads(runningPayload.Key).Instrument2Payload = dataPayloads(runningPayload.Key)
-                                                End If
-                                            Next
-                                        End If
+
+                                Dim instrument1Payloads As Dictionary(Of Date, Payload) = Await cmn.GetHistoricalDataForSpecificTradingSymbolAsync(Common.DataBaseTable.Intraday_Futures, optionStocks(runningStock).Instrument1, lastTradingDate.Date, lastTradingDate.Date).ConfigureAwait(False)
+                                If instrument1Payloads IsNot Nothing AndAlso instrument1Payloads.Count > 0 Then
+                                    For Each runningPayload In instrument1Payloads.Values
+                                        If optionPayloads Is Nothing Then optionPayloads = New Dictionary(Of Date, PairPayload)
+                                        optionPayloads.Add(runningPayload.PayloadDate, New PairPayload With {.Instrument1Payload = runningPayload})
+                                    Next
+
+                                    Dim instrument2Payloads As Dictionary(Of Date, Payload) = Await cmn.GetHistoricalDataForSpecificTradingSymbolAsync(Common.DataBaseTable.Intraday_Futures, optionStocks(runningStock).Instrument2, lastTradingDate.Date, lastTradingDate.Date).ConfigureAwait(False)
+                                    If instrument2Payloads IsNot Nothing AndAlso instrument2Payloads.Count > 0 Then
+                                        For Each runningPayload In optionPayloads
+                                            If instrument2Payloads.ContainsKey(runningPayload.Key) Then
+                                                optionPayloads(runningPayload.Key).Instrument2Payload = instrument2Payloads(runningPayload.Key)
+                                            End If
+                                        Next
                                     End If
-                                Next
+                                End If
                                 If optionPayloads IsNot Nothing AndAlso optionPayloads.Count > 0 Then
                                     OnHeartbeat("Writing Excel")
-                                    Await WriteToExcel(excelWriter, optionPayloads, GetSheetName(runningStock)).ConfigureAwait(False)
+                                    Await WriteToExcel(excelWriter, optionPayloads, GetSheetName(runningStock), optionStocks(runningStock).LotSize).ConfigureAwait(False)
                                 End If
                             End If
                         Next
@@ -333,7 +332,7 @@ Public Class frmMain
         txtFilePath.Text = OpenFileDialog.FileName
     End Sub
 
-    Private Async Function WriteToExcel(ByVal excelWriter As ExcelHelper, ByVal dataToWrite As Dictionary(Of Date, PairPayload), ByVal sheetName As String) As Task
+    Private Async Function WriteToExcel(ByVal excelWriter As ExcelHelper, ByVal dataToWrite As Dictionary(Of Date, PairPayload), ByVal sheetName As String, ByVal lotSize As Integer) As Task
         Await Task.Delay(0, _canceller.Token).ConfigureAwait(False)
 
         excelWriter.CopyExcelSheet("Template", sheetName)
@@ -345,7 +344,7 @@ Public Class frmMain
         Dim columnCounter As Integer = 0
 
         If dataToWrite IsNot Nothing AndAlso dataToWrite.Count > 0 Then
-            Dim mainRawData(dataToWrite.Count - 1, 15) As Object
+            Dim mainRawData(dataToWrite.Count - 1, 13) As Object
             Dim dateCtr As Integer = 0
             Dim lastInstrument1Data As Payload = Nothing
             Dim lastInstrument2Data As Payload = Nothing
@@ -368,8 +367,6 @@ Public Class frmMain
                     mainRawData(rowCounter, columnCounter) = runningData.Value.Instrument1Payload.Close
                     columnCounter += 1
                     mainRawData(rowCounter, columnCounter) = runningData.Value.Instrument1Payload.Volume
-                    columnCounter += 1
-                    mainRawData(rowCounter, columnCounter) = runningData.Value.Instrument1Payload.CandleColor.ToString
 
                     lastInstrument1Data = runningData.Value.Instrument1Payload
                 Else
@@ -377,8 +374,6 @@ Public Class frmMain
                     mainRawData(rowCounter, columnCounter) = lastInstrument1Data.TradingSymbol
                     columnCounter += 1
                     mainRawData(rowCounter, columnCounter) = runningData.Key
-                    columnCounter += 1
-                    mainRawData(rowCounter, columnCounter) = ""
                     columnCounter += 1
                     mainRawData(rowCounter, columnCounter) = ""
                     columnCounter += 1
@@ -406,8 +401,6 @@ Public Class frmMain
                     mainRawData(rowCounter, columnCounter) = runningData.Value.Instrument2Payload.Close
                     columnCounter += 1
                     mainRawData(rowCounter, columnCounter) = runningData.Value.Instrument2Payload.Volume
-                    columnCounter += 1
-                    mainRawData(rowCounter, columnCounter) = runningData.Value.Instrument2Payload.CandleColor.ToString
 
                     lastInstrument2Data = runningData.Value.Instrument2Payload
                 Else
@@ -415,8 +408,6 @@ Public Class frmMain
                     mainRawData(rowCounter, columnCounter) = lastInstrument2Data.TradingSymbol
                     columnCounter += 1
                     mainRawData(rowCounter, columnCounter) = runningData.Key
-                    columnCounter += 1
-                    mainRawData(rowCounter, columnCounter) = ""
                     columnCounter += 1
                     mainRawData(rowCounter, columnCounter) = ""
                     columnCounter += 1
@@ -435,6 +426,8 @@ Public Class frmMain
             excelWriter.WriteArrayToExcel(mainRawData, range)
             Erase mainRawData
             mainRawData = Nothing
+
+            excelWriter.SetData(2, 31, lotSize, "##,##,##0", ExcelHelper.XLAlign.Right)
         End If
         excelWriter.SaveExcel()
     End Function
