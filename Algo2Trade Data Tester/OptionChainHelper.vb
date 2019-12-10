@@ -210,15 +210,33 @@ Public Class OptionChainHelper
 
     Public Async Function GetDataAsync() As Task(Of List(Of OptionChain))
         Dim ret As List(Of OptionChain) = Nothing
-        Dim optionChainData As DataTable = Nothing
         If Not File.Exists(_filename) Then
             Await GetOptionChainDataAsync().ConfigureAwait(False)
         End If
-        Using csvhlpr As New CSVHelper(_filename, ",", _cts)
-            optionChainData = csvhlpr.GetDataTableFromCSV(0)
-        End Using
-        If optionChainData IsNot Nothing Then
+        If File.Exists(_filename) Then
+            Dim optionChainData As DataTable = Nothing
+            Using csvhlpr As New CSVHelper(_filename, ",", _cts)
+                optionChainData = csvhlpr.GetDataTableFromCSV(0)
+            End Using
+            If optionChainData IsNot Nothing AndAlso optionChainData.Rows.Count > 0 Then
+                For i = 1 To optionChainData.Rows.Count - 1
+                    Dim callData As OptionChain = New OptionChain
+                    callData.OI = If(optionChainData.Rows(i).Item(0) = "-", Decimal.MinValue, optionChainData.Rows(i).Item(0))
+                    callData.ChangeInOI = If(optionChainData.Rows(i).Item(1) = "-", Decimal.MinValue, optionChainData.Rows(i).Item(1))
+                    callData.Volume = If(optionChainData.Rows(i).Item(2) = "-", Decimal.MinValue, optionChainData.Rows(i).Item(2))
+                    callData.IV = If(optionChainData.Rows(i).Item(3) = "-", Decimal.MinValue, optionChainData.Rows(i).Item(3))
+                    callData.LTP = If(optionChainData.Rows(i).Item(4) = "-", Decimal.MinValue, optionChainData.Rows(i).Item(4))
+                    callData.NetChange = If(optionChainData.Rows(i).Item(5) = "-", Decimal.MinValue, optionChainData.Rows(i).Item(5))
+                    callData.BidQuantity = If(optionChainData.Rows(i).Item(6) = "-", Decimal.MinValue, optionChainData.Rows(i).Item(6))
+                    callData.BidPrice = If(optionChainData.Rows(i).Item(7) = "-", Decimal.MinValue, optionChainData.Rows(i).Item(7))
+                    callData.AskPrice = If(optionChainData.Rows(i).Item(8) = "-", Decimal.MinValue, optionChainData.Rows(i).Item(8))
+                    callData.AskQuantity = If(optionChainData.Rows(i).Item(9) = "-", Decimal.MinValue, optionChainData.Rows(i).Item(9))
+                    callData.StrikePrice = If(optionChainData.Rows(i).Item(10) = "-", Decimal.MinValue, optionChainData.Rows(i).Item(10))
 
+                    If ret Is Nothing Then ret = New List(Of OptionChain)
+                    ret.Add(callData)
+                Next
+            End If
         End If
         Return ret
     End Function
